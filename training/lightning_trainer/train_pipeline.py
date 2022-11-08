@@ -158,7 +158,7 @@ def callbacks(config):
     return [early_stopping, tune_callback, checkpoints_callback]
 
 @mlflow_mixin
-def run(config, list_train, list_val, callbacks):
+def run(config, list_train, list_val, callbacks, logger=None):
 
     # Label encoder
     label_encoder = EncodeFileLabel(config["LABEL_FILE"])
@@ -175,11 +175,15 @@ def run(config, list_train, list_val, callbacks):
 
 
     # Customize the training (add GPUs, callbacks ...)
-    trainer = pl.Trainer(default_root_dir=config["PATH_LIGHTNING_METRICS"], 
-                        max_epochs=config["N_EPOCHS"],
-                        callbacks=callbacks,
-                        accelerator=config["ACCELERATOR"]) 
-    #trainer.save_checkpoint("example.ckpt")
+    trainer = pl.Trainer(
+        default_root_dir=config["PATH_LIGHTNING_METRICS"],
+        max_epochs=config["N_EPOCHS"],
+        callbacks=callbacks,
+        accelerator=config["ACCELERATOR"],
+        logger=logger,
+        gpus=[0],
+        # replace_sampler_ddp=False,
+    )
 
     # Parameters for the training loop
     training_loop = TransferTrainingModule(learning_rate=config["LEARNING_RATE"], num_target_classes=config["NUM_TARGET_CLASSES"])
@@ -190,7 +194,7 @@ def run(config, list_train, list_val, callbacks):
     trainer.fit(training_loop, trainLoader, valLoader) 
 
 
-@ray.remote(num_gpus=1)
+@ray.remote(num_gpus=0.6)
 def grid_search(config, list_train, list_val, cbacks):
 
     IP_HEAD_NODE = os.environ.get("IP_HEAD")

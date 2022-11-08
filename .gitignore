@@ -177,6 +177,7 @@ __pycache__/
 bash_utils/
 hpc/
 docker-compose.yml
-
-
+ray_logs/
+experiment_output/
+temp_data_cache/
 
