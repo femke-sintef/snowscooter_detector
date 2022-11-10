@@ -158,7 +158,7 @@ def callbacks(config):
     return [early_stopping, tune_callback, checkpoints_callback]
 
 @mlflow_mixin
-def run(config, list_train, list_val, callbacks, logger=None):
+def run(config, list_train, list_val, callbacks, logger=None, gpus=None):
 
     # Label encoder
     label_encoder = EncodeFileLabel(config["LABEL_FILE"])
@@ -181,7 +181,7 @@ def run(config, list_train, list_val, callbacks, logger=None):
         callbacks=callbacks,
         accelerator=config["ACCELERATOR"],
         logger=logger,
-        gpus=[0],
+        gpus=gpus,
         # replace_sampler_ddp=False,
     )
 
@@ -192,6 +192,8 @@ def run(config, list_train, list_val, callbacks, logger=None):
     #with mlflow.start_run(experiment_id=config["current_experiment"]) as run:
     mlflow.pytorch.autolog(log_models = True)
     trainer.fit(training_loop, trainLoader, valLoader) 
+
+    
 
 
 @ray.remote(num_gpus=0.6)

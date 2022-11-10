@@ -24,7 +24,9 @@ def my_run_wrapper(experiment):
     # use smaller dataset when debugging
     if DEBUG:
         config["PATH_TRAIN_VAL_DATASET"] = "/data/phd_femke/soundsolution/Ben_backup/Model_training_data_debug/"
-
+        config["N_EPOCHS"] = 1
+    # set model checkpoint path
+    config["PATH_LIGHTNING_METRICS"] = join(experiment.dir_path_out, "models")
     # Do the connection
     myfs = doConnection(config["CONNECTION_STRING"])
 
@@ -59,7 +61,14 @@ def my_run_wrapper(experiment):
         list_val=val_list,
         callbacks=cbacks,
         logger=PACLogger(experiment),
+        gpus = config["GPUS"]
     )
+    min_validation_loss = (
+            cbacks[2].best_model_score.cpu().detach().numpy()
+        )
+
+    experiment.log_metric("min_val_loss", np.float(min_validation_loss))
+    return min_validation_loss
 
 
 if __name__ == "__main__":
